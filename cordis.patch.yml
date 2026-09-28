@@ -1,0 +1,20 @@
+# Mounts cost-ledger into a dsh profile. `dsh plugin add` appends this row; edit
+# the config in place, or override the whole row from ~/.dsh/cordis.patch.yml
+# (later layers win per row, no deep merge).
+- insert:
+    - id: cost-ledger
+      name: dsh-plugin-cost-ledger
+      config:
+        enabled: true
+        accounting: own   # own | assume-price-aware (price-aware mounted and owns accounting)
+        # dataDir: ~/.dsh/cost-ledger   # default; one JSONL file per month
+        # exportDir: ~/Desktop          # where /ledger-export writes CSV (default: dataDir)
+        currency: auto     # auto | CNY | USD
+        holidays: []       # Beijing YYYY-MM-DD dates billed at off-peak
+        reportMonths: 3    # months /ledger walks back for the comparison
+        # Relay / reseller pricing, same shape as price-aware.prices:
+        prices: []
+        #  - id: jiyuan/deepseek-v4-flash
+        #    currency: CNY
+        #    perMillion: { cacheRead: 0.5, uncachedInput: 3, output: 12 }
+        #    aliases: [deepseek-v4-flash]
