@@ -13,6 +13,8 @@ price-aware（[dsh-plugin-price-aware](https://github.com/121212165/dsh-plugin-p
 - **损坏容错**：崩溃留下的半行 JSON 被跳过并计数，文件永不静默改写；`/ledger` 输出里会提示"N 行损坏"。
 
 ## 安装
+> 从源码安装需要先构建：`npm install` 会经 `prepare` 脚本自动产出 `lib/`（`npm run build` 也可手动触发）；npm 安装则无需此步。
+
 
 ```sh
 # 把本目录放进 profile 的 node_modules（或 npm install 后 dsh plugin add 指向它），
