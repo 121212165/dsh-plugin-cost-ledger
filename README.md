@@ -1,5 +1,7 @@
 # dsh-plugin-cost-ledger
 
+**EN** · Bills every model call into a monthly JSONL cost ledger — token buckets (uncached input / cache read / cache write / output), off-peak dates, per-currency isolation — then `/ledger` prints month tables and `/ledger-export` writes CSV. Anything without a price row is dropped rather than guessed, so a missing price can never silently mis-state a total. · 30 `node --test` green · **not yet live-mounted in a running dsh**.
+
 DeepSeek Harness (dsh) 插件：把每一次有价目的模型调用记进持久台账，出月度汇总、CSV 导出，并让 agent 能回答"这个月花了多少钱"。
 
 price-aware（[dsh-plugin-price-aware](https://github.com/121212165/dsh-plugin-price-aware)）解决了"现在烧多快、要不要拦"；本插件解决"月度账本"：数据落盘、跨会话存活、可导出可对账。
@@ -13,25 +15,22 @@ price-aware（[dsh-plugin-price-aware](https://github.com/121212165/dsh-plugin-p
 - **损坏容错**：崩溃留下的半行 JSON 被跳过并计数，文件永不静默改写；`/ledger` 输出里会提示"N 行损坏"。
 
 ## 安装
-> 从源码安装需要先构建：`npm install` 会经 `prepare` 脚本自动产出 `lib/`（`npm run build` 也可手动触发）；npm 安装则无需此步。
 
+三步，实测于 `@deepseek-ai/dsh@0.1.7-alpha.1`（需 `pnpm` 在 PATH 上）：
 
 ```sh
-# 把本目录放进 profile 的 node_modules（或 npm install 后 dsh plugin add 指向它），
-# 再在 profile 的 cordis.patch.yml 里加入 cordis.patch.yml 的 insert 行。
+# ① 装进 profile：dsh plugin 把参数原样转发给 pnpm，git 包会自动跑 prepare 构建 lib/
+dsh plugin --profile web add github:121212165/dsh-plugin-cost-ledger
 ```
 
-最小配置（全部可省略，见下方逐项说明）：
+② 把本仓库根目录 `cordis.patch.yml` 的内容**并进** `$DSH_HOME/profiles/web/cordis.patch.yml`。
+该文件默认是 `[]`，所以要么整份替换，要么把 insert 条目并进同一个数组；**不要直接追加**——
+追加会形成两个 YAML 文档，启动即报
+`failed to parse overlay ... end of the stream or a document separator is expected`（本机实测踩过）。
 
-```yaml
-- insert:
-    - id: cost-ledger
-      name: dsh-plugin-cost-ledger
-      config:
-        enabled: true
-        accounting: own
-```
+③ 重启 dsh。配置层与 client 半都要重启才生效（客户端按 boot 时算出的内容 rev 下发，硬刷新浏览器没用）。
 
+自检挂载：`dsh --profile web --dump-config | grep dsh-plugin-cost-ledger`，应看到该条目。
 ## 配置
 
 | 字段 | 默认 | 说明 |
@@ -40,10 +39,10 @@ price-aware（[dsh-plugin-price-aware](https://github.com/121212165/dsh-plugin-p
 | `accounting` | `own` | `own`：自己从 session 事件记账；`assume-price-aware`：price-aware 已挂载并负责记账，本插件只读台账文件做报表 |
 | `dataDir` | `~/.dsh/cost-ledger` | JSONL 台账目录，`~` 会展开 |
 | `exportDir` | `dataDir` | CSV 导出目录 |
-| `currency` | `auto` | 记录跟随价目行的币种；此项只影响兜底显示 |
 | `prices` | `[]` | 中转/自定价目，形状与 price-aware.prices 完全一致 |
 | `holidays` | `[]` | 按错峰计价的北京时间日期（YYYY-MM-DD） |
-| `reportMonths` | `3` | 报告向回看几个月 |
+
+模糊匹配说明：模型 id 只能低置信度对到价目行时（`matchVia: contains/normalized/alias`），记录里会带 `matchVia` 字段标记——金额是估算，核对价目表后再信。
 
 ## 数据 schema（JSONL 每行）
 
@@ -71,7 +70,7 @@ price-aware（[dsh-plugin-price-aware](https://github.com/121212165/dsh-plugin-p
 - `tsc --noEmit` 通过；`node --test` 30 个测试全绿（记账解析、容错、月聚合、跨月边界、多币种隔离、CSV 转义、store 读写、报告渲染、配置校验）。
 - **未在运行中的 dsh 里 live mount 验证**。事件面（`agent/request`、`session/event`、`session/disposed`）与 price-aware 使用并验证过的完全一致，但 `commands`/`tools` 的实际注册结果需要在真实 dsh 里确认。
 
-## 已知局限
+## 已知边界
 
 - 台账文件暂时手装手清（无 compaction/归档命令）。
 - `assume-price-aware` 模式目前只是"只报表"，不会替 price-aware 落盘。
