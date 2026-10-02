@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "花费台账",
+    "description": "按月持久记账：每次模型调用计费入账，/ledger 月报、/ledger-export CSV、ledger_query 查询"
+  }
+}
