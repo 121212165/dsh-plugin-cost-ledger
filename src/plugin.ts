@@ -36,9 +36,8 @@ export interface Config extends CostLedgerConfig {}
 export const Config = Schema.object({
   enabled: Schema.boolean().default(DEFAULT_CONFIG.enabled),
   accounting: Schema.union([Schema.const('own'), Schema.const('assume-price-aware')]).default('own'),
-  dataDir: Schema.string(),
-  exportDir: Schema.string(),
-  currency: Schema.union([Schema.const('auto'), Schema.const('CNY'), Schema.const('USD')]).default('auto'),
+  dataDir: Schema.string().default(''),
+  exportDir: Schema.string().default(''),
   prices: Schema.array(
     Schema.object({
       id: Schema.string(),
@@ -56,13 +55,7 @@ export const Config = Schema.object({
     }),
   ).default([]),
   holidays: Schema.array(Schema.string()).default([]),
-  reportMonths: Schema.natural().default(3),
 });
-
-interface ModelRef {
-  id: string;
-  provider?: string;
-}
 
 export function apply(ctx: Context, config: Config): void {
   const problems = validateConfig(config);
@@ -76,26 +69,19 @@ export function apply(ctx: Context, config: Config): void {
   const rules = { holidays: config.holidays };
   const store = new LedgerStore(config.dataDir);
   const exportDir = config.exportDir ? expandHome(config.exportDir) : store.dataDir;
-  const modelByAgent = new Map<string, ModelRef>();
 
   if (config.accounting === 'own') {
-    /** The outgoing call config is the only place the live provider+model pair is authoritative. */
-    ctx.on('agent/request', (payload, next) =>
-      next().then((callConfig) => {
-        const shape = callConfig as unknown as { provider?: string; model?: string };
-        if (shape.model) {
-          modelByAgent.set(agentKey(payload.agent), { id: shape.model, provider: shape.provider });
-        }
-        return callConfig;
-      }),
-    );
-
     ctx.on('session/event', (session, event) => {
       if (event.type !== 'assistant/message') return;
       const usage = event.data.usage as RawUsage | undefined;
       if (!usage) return;
       const sessionId = String((session as { id?: unknown }).id ?? 'session');
-      const model = modelByAgent.get(agentKey(session)) ?? { id: 'unknown' };
+      // The assistant message's own source carries the provider/model pair that
+      // actually served this turn. The agent/request waterfall payload is
+      // {turn, step, signal} with no agent reference, so a map keyed off it
+      // cannot be correlated back to a session — read it from the event instead.
+      const source = (event.data as { message?: { source?: { provider?: string; model?: string } } }).message?.source;
+      const model = { id: source?.model ?? 'unknown', provider: source?.provider };
       const resolution = resolveModel(model.id, catalog, { provider: model.provider });
       if (resolution.kind !== 'known') {
         log.debug(`unpriced event dropped (model ${model.id} not in sheet) — ledger stays complete for priced models`);
@@ -112,6 +98,7 @@ export function apply(ctx: Context, config: Config): void {
           modelId: model.id,
           provider: model.provider,
           pricedAs: resolution.entry.id,
+          ...(resolution.confidence < 0.9 ? { matchVia: resolution.via } : {}),
           reasoningTokens: Math.max(0, usage.reasoningTokens ?? 0),
           buckets,
           currency: cost.currency,
@@ -169,25 +156,10 @@ export function apply(ctx: Context, config: Config): void {
     }),
   );
 
-  ctx.on('session/disposed', (session) => {
-    modelByAgent.delete(String((session as { id?: unknown }).id ?? ''));
-  });
-
   log.info(`mounted · accounting=${config.accounting} · dataDir=${store.dataDir}`);
 }
 
 function currentMonth(): string {
   const now = new Date();
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
-}
-
-interface ScopedLike {
-  id?: string;
-  session?: { id?: string };
-  agent?: unknown;
-}
-
-function agentKey(agent: unknown): string {
-  const value = agent as ScopedLike | undefined;
-  return String(value?.id ?? value?.session?.id ?? 'agent');
 }

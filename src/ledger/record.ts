@@ -16,6 +16,9 @@ export interface LedgerRecord {
   provider?: string;
   /** id of the price row the event was billed against */
   pricedAs: string;
+  /** present only when the row was chosen by a low-confidence fuzzy match —
+   * the number is an estimate, check the sheet before trusting it */
+  matchVia?: string;
   buckets: TokenBuckets;
   reasoningTokens: number;
   currency: string;
@@ -32,6 +35,7 @@ export function toRecord(sessionId: string, entry: LedgerEntryInput): LedgerReco
     modelId: entry.modelId,
     provider: entry.provider,
     pricedAs: entry.pricedAs,
+    ...(entry.matchVia ? { matchVia: entry.matchVia } : {}),
     buckets: entry.buckets,
     reasoningTokens: entry.reasoningTokens,
     currency: entry.currency,
@@ -46,6 +50,7 @@ export interface LedgerEntryInput {
   modelId: string;
   provider?: string;
   pricedAs: string;
+  matchVia?: string;
   reasoningTokens: number;
   buckets: TokenBuckets;
   currency: string;

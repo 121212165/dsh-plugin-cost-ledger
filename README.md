@@ -67,7 +67,9 @@ dsh plugin --profile web add github:121212165/dsh-plugin-cost-ledger
 
 ## 验证状态
 
-- `tsc --noEmit` 通过；`node --test` 30 个测试全绿（记账解析、容错、月聚合、跨月边界、多币种隔离、CSV 转义、store 读写、报告渲染、配置校验）。
+- `tsc --noEmit` 通过；`node --test` 37 个测试全绿（30 纯函数：记账解析、容错、月聚合、跨月边界、多币种隔离、CSV 转义、store 读写、报告渲染、配置校验；7 个装配层集成测试：真实 apply() 挂 mock ctx，真实 usage 事件驱动 session/event 监听器进真临时台账，/ledger 月报、/ledger-export CSV、ledger_query、accounting 双模式、无价模型容错）。
+> 装配层测试 harness 借鉴 dsh-auto-review（222★，PerryLink）的 mountHarness 方法论，node:test 版实现来自 [dsh-plugin-task-forge](https://github.com/121212165/dsh-plugin-task-forge)（本家族首个装配层覆盖的插件）。
+
 - **未在运行中的 dsh 里 live mount 验证**。事件面（`agent/request`、`session/event`、`session/disposed`）与 price-aware 使用并验证过的完全一致，但 `commands`/`tools` 的实际注册结果需要在真实 dsh 里确认。
 
 ## 已知边界

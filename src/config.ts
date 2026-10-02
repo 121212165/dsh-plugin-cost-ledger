@@ -10,21 +10,16 @@ export interface CostLedgerConfig {
   dataDir?: string;
   /** default export directory for /ledger-export (defaults to the data dir) */
   exportDir?: string;
-  currency: 'auto' | 'CNY' | 'USD';
   prices: PriceEntry[];
   /** Beijing YYYY-MM-DD dates billed at off-peak */
   holidays: string[];
-  /** how many months /ledger renders by default */
-  reportMonths: number;
 }
 
 export const DEFAULT_CONFIG: CostLedgerConfig = {
   enabled: true,
   accounting: 'own',
-  currency: 'auto',
   prices: [],
   holidays: [],
-  reportMonths: 3,
 };
 
 export interface ConfigProblem {
@@ -36,9 +31,6 @@ export function validateConfig(config: Partial<CostLedgerConfig>): ConfigProblem
   const problems: ConfigProblem[] = [];
   if (config.accounting && !['own', 'assume-price-aware'].includes(config.accounting)) {
     problems.push({ field: 'accounting', message: `accounting 需为 own|assume-price-aware，收到 ${config.accounting}` });
-  }
-  if (config.reportMonths !== undefined && (!Number.isInteger(config.reportMonths) || config.reportMonths < 1 || config.reportMonths > 120)) {
-    problems.push({ field: 'reportMonths', message: `reportMonths 需是 1..120 的整数，收到 ${config.reportMonths}` });
   }
   for (const [index, entry] of (config.prices ?? []).entries()) {
     if (!entry?.id) {

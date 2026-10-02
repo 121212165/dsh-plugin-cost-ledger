@@ -73,10 +73,19 @@ test('renderMonth shows model and day breakdowns with share bars', () => {
   assert.ok(text.includes('█'));
 });
 
-test('config validation catches a bad accounting mode and month count', () => {
-  assert.equal(validateConfig({ accounting: 'own', reportMonths: 3 }).length, 0);
-  const problems = validateConfig({ accounting: 'yolo' as never, reportMonths: 0 });
-  assert.equal(problems.length, 2);
+test('config validation catches a bad accounting mode, price rows and holiday format', () => {
+  assert.equal(validateConfig({ accounting: 'own' }).length, 0);
+  const problems = validateConfig({
+    accounting: 'yolo' as never,
+    prices: [
+      { perMillion: {} } as never,
+      { id: 'mystery', perMillion: { uncachedInput: -1, output: 2, cacheRead: 3 } } as never,
+    ],
+    holidays: ['2026-9-1'],
+  });
+  assert.equal(problems.length, 4);
   assert.ok(problems.some((p) => p.field === 'accounting'));
-  assert.ok(problems.some((p) => p.field === 'reportMonths'));
+  assert.ok(problems.some((p) => p.field === 'prices' && p.message.includes('prices[0] 缺少 id')));
+  assert.ok(problems.some((p) => p.field === 'prices' && p.message.includes('prices[1] (mystery)')));
+  assert.ok(problems.some((p) => p.field === 'holidays'));
 });
