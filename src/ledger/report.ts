@@ -57,7 +57,7 @@ export function renderLedgerReport(aggregate: LedgerAggregate, now: Date): strin
       const delta = current.costMicros - previous.costMicros;
       const arrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
       blocks.push(
-        `${currentBlock}\n对比上月: ${arrow} ${money(Math.abs(delta), currency)}（上月 ${money(previous.costMicros, currency)}）`,
+        `${currentBlock}\n对比上月: ${arrow} ${money(Math.abs(delta), currency)}（上月 ${money(previous.costMicros, currency)}）\n${monthOverMonth(current.costMicros, previous.costMicros)}`,
       );
     } else {
       blocks.push(currentBlock);
@@ -67,4 +67,18 @@ export function renderLedgerReport(aggregate: LedgerAggregate, now: Date): strin
     blocks.push(`⚠ 台账文件里有 ${aggregate.skippedLines} 行损坏被跳过（文件未改动，可手工修复）`);
   }
   return blocks.join('\n\n');
+}
+
+/** 环比结论：把差值翻译成一句人话。阈值钉死在测试里：±10% 内算持平，
+ * ±10-30% 算涨/落，超过 ±30% 点名"明显"并提示看用量结构。 */
+export function monthOverMonth(current: number, previous: number): string {
+  if (!Number.isFinite(previous) || previous <= 0) return current > 0 ? '环比结论: 上月没有基数，无从谈起' : '';
+  const pct = Math.round((current / previous - 1) * 100);
+  const arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+  let verdict = '基本持平';
+  if (pct >= 30) verdict = '明显上涨——看看是不是用量结构变了';
+  else if (pct >= 10) verdict = '在上涨，留意趋势';
+  else if (pct <= -30) verdict = '明显下降';
+  else if (pct <= -10) verdict = '在回落';
+  return `环比结论: ${arrow} ${Math.abs(pct)}% —— ${verdict}`;
 }

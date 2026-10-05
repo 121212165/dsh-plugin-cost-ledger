@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { aggregateWithSessions } from '../src/ledger/aggregate.ts';
-import { renderLedgerReport, renderMonth } from '../src/ledger/report.ts';
+import { monthOverMonth, renderLedgerReport, renderMonth } from '../src/ledger/report.ts';
 import { validateConfig } from '../src/config.ts';
 import type { LedgerRecord } from '../src/ledger/record.ts';
 
@@ -88,4 +88,16 @@ test('config validation catches a bad accounting mode, price rows and holiday fo
   assert.ok(problems.some((p) => p.field === 'prices' && p.message.includes('prices[0] 缺少 id')));
   assert.ok(problems.some((p) => p.field === 'prices' && p.message.includes('prices[1] (mystery)')));
   assert.ok(problems.some((p) => p.field === 'holidays'));
+});
+
+test('monthOverMonth turns the delta into one plain verdict', () => {
+  assert.equal(monthOverMonth(11_000_000, 10_000_000), '环比结论: ↑ 10% —— 在上涨，留意趋势');
+  assert.equal(monthOverMonth(9_500_000, 10_000_000), '环比结论: ↓ 5% —— 基本持平');
+  assert.equal(monthOverMonth(14_000_000, 10_000_000), '环比结论: ↑ 40% —— 明显上涨——看看是不是用量结构变了');
+  assert.equal(monthOverMonth(6_000_000, 10_000_000), '环比结论: ↓ 40% —— 明显下降');
+  assert.equal(monthOverMonth(0, 0), '');
+  assert.equal(monthOverMonth(500_000, 0), '环比结论: 上月没有基数，无从谈起');
+  // the /ledger report carries the conclusion under the delta line
+  const text = renderLedgerReport(aggregateWithSessions([record({}), record({ at: '2026-08-20T02:00:00.000Z', costMicros: 10_000 })]), NOW_UTC);
+  assert.ok(text.includes('环比结论:'), text);
 });
