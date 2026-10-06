@@ -1,5 +1,8 @@
 # dsh-plugin-cost-ledger
 
+> 🧩 **dsh 插件家族**（22 件）：总目录 **[dsh-plugin-family](https://github.com/121212165/dsh-plugin-family)** ｜ 明星插件：**[ide-hub](https://github.com/121212165/dsh-plugin-ide-hub)** 跨 IDE 统一管理 · **[task-forge](https://github.com/121212165/dsh-plugin-task-forge)** 跨窗口无损交接 · **[quota](https://github.com/121212165/dsh-plugin-quota)** 实时用量仪表
+
+
 **EN** · Bills every model call into a monthly JSONL cost ledger — token buckets (uncached input / cache read / cache write / output), off-peak dates, per-currency isolation — then `/ledger` prints month tables and `/ledger-export` writes CSV. Anything without a price row is dropped rather than guessed, so a missing price can never silently mis-state a total. · 30 `node --test` green · **not yet live-mounted in a running dsh**.
 
 DeepSeek Harness (dsh) 插件：把每一次有价目的模型调用记进持久台账，出月度汇总、CSV 导出，并让 agent 能回答"这个月花了多少钱"。
