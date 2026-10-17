@@ -29,7 +29,14 @@ export const name = 'cost-ledger';
  * constructor — `commands` and `tools`, not the package names. A name that
  * resolves to no implementation makes cordis mark the plugin inactive.
  */
+/**
+ * Injects `commands`/`llm`/`sessions`/`tools`; provides the merged price
+ * catalog to siblings via cordis `provide` — a profile that also mounts
+ * price-aware resolves its unknown models against this sheet without extra
+ * configuration (single direction, per plan 2.3).
+ */
 export const inject = ['commands', 'llm', 'sessions', 'tools'];
+export const provide = ['pricing-catalog'];
 
 export interface Config extends CostLedgerConfig {}
 
@@ -66,6 +73,7 @@ export function apply(ctx: Context, config: Config): void {
   if (!config.enabled) return void log.info('disabled by config');
 
   const catalog: PriceCatalog = mergeCatalog(DEEPSEEK_CATALOG, config.prices as PriceEntry[]);
+  ctx.provide('pricing-catalog', catalog);
   const rules = { holidays: config.holidays };
   const store = new LedgerStore(config.dataDir);
   const exportDir = config.exportDir ? expandHome(config.exportDir) : store.dataDir;

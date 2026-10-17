@@ -30,6 +30,8 @@ export interface Harness {
   commands: CapturedCommand[];
   tools: CapturedTool[];
   listeners: CapturedListener[];
+  /** Services handed to cordis via `ctx.provide(name, value)`. */
+  provided: Record<string, unknown>;
   dataDir: string;
   apply(config: Record<string, unknown>): Promise<void>;
   command(name: string): CapturedCommand;
@@ -43,9 +45,16 @@ export function makeHarness(): Harness {
   const tools: CapturedTool[] = [];
   const listeners: CapturedListener[] = [];
 
+  const provided: Record<string, unknown> = {};
   const ctx = {
     logger(_name: string) {
       return { info() {}, warn() {}, debug() {} };
+    },
+    provide(name: string, value?: unknown) {
+      provided[name] = value;
+      return () => {
+        delete provided[name];
+      };
     },
     on(event: string, callback: (session: unknown, event: unknown) => void) {
       listeners.push({ event, callback });
@@ -72,6 +81,7 @@ export function makeHarness(): Harness {
     commands,
     tools,
     listeners,
+    provided,
     dataDir,
     apply(config: Record<string, unknown>) {
       // Schema defaults (accounting: 'own' etc.) only apply through the host —

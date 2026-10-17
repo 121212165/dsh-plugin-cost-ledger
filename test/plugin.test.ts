@@ -44,6 +44,16 @@ test('apply wires two commands, the ledger_query tool, and the session/event lis
   assert.ok(harness.listeners.some((listener) => listener.event === 'session/event'));
 });
 
+test('apply provides the pricing-catalog service merged with config.prices', async () => {
+  const harness = await mounted({
+    prices: [{ id: 'probe-model', currency: 'CNY', perMillion: { cacheRead: 1, uncachedInput: 2, output: 3 } }],
+  });
+  const catalog = harness.provided['pricing-catalog'] as { entries: Array<{ id: string }> } | undefined;
+  assert.ok(catalog, 'pricing-catalog was never provided');
+  assert.ok(catalog.entries.length > 0);
+  assert.ok(catalog.entries.some((entry) => entry.id === 'probe-model'), 'config prices must be inside the catalog');
+});
+
 test('a real usage event lands in the ledger and shows up in /ledger and ledger_query', async () => {
   const harness = await mounted();
   harness.emitUsage('session-abc123', 'deepseek-flash', usage);
