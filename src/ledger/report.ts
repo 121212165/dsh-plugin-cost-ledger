@@ -29,6 +29,10 @@ function sliceLines(slices: Slice[], total: number, limit: number, label: (slice
 export function renderMonth(month: MonthAggregate): string {
   const lines = [
     `${month.month}（${month.currency}）：${money(month.costMicros, month.currency)} · ${month.events} 次调用 · ${month.sessions} 个会话 · ${Math.round(month.tokens / 1000)}k tokens（缓存命中 ${(month.buckets.cacheRead > 0 ? month.buckets.cacheRead / Math.max(1, month.buckets.cacheRead + month.buckets.uncachedInput) : 0) * 100}%）`,
+    // official --json has no cacheRead bucket; the ledger file is the hard source
+    // for reconciliation, and this line makes /ledger itself carry all four
+    // buckets so the jsonl only matters for per-event forensics (plan 2.4)
+    `  桶明细: uncachedInput ${month.buckets.uncachedInput} · cacheRead ${month.buckets.cacheRead} · cacheWrite ${month.buckets.cacheWrite} · output ${month.buckets.output}`,
   ];
   if (month.byModel.length) {
     lines.push('按模型:');

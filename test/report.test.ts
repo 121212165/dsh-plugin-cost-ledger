@@ -73,6 +73,17 @@ test('renderMonth shows model and day breakdowns with share bars', () => {
   assert.ok(text.includes('█'));
 });
 
+test('renderMonth renders an explicit four-bucket reconciliation line', () => {
+  const aggregate = aggregateWithSessions([record({ buckets: { uncachedInput: 100, cacheRead: 900, output: 50, cacheWrite: 7 } })]);
+  const text = renderMonth(aggregate.months[0]!);
+  assert.ok(text.includes('桶明细'), text);
+  assert.ok(text.includes('uncachedInput'), text);
+  assert.ok(text.includes('cacheRead 900'), text);
+  assert.ok(text.includes('cacheWrite 7'), text);
+  assert.ok(text.includes('output 50'), text);
+  assert.ok(text.includes('缓存命中 9'), text);
+});
+
 test('config validation catches a bad accounting mode, price rows and holiday format', () => {
   assert.equal(validateConfig({ accounting: 'own' }).length, 0);
   const problems = validateConfig({
