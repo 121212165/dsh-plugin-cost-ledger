@@ -18,9 +18,9 @@ const entry = (at: string): LedgerEntryInput => ({
   costMicros: 1_000_000,
 });
 
-function tempStore(now = () => new Date()): { store: LedgerStore; dir: string } {
+function tempStore(): { store: LedgerStore; dir: string } {
   const dir = mkdtempSync(join(tmpdir(), 'cost-ledger-'));
-  return { store: new LedgerStore(dir, now), dir };
+  return { store: new LedgerStore(dir), dir };
 }
 
 test('appends land in one file per month and read back intact', () => {

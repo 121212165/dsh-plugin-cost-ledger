@@ -13,7 +13,7 @@ export interface LedgerRecord {
   turn: number;
   step: number;
   modelId: string;
-  provider?: string;
+  provider?: string | undefined;
   /** id of the price row the event was billed against */
   pricedAs: string;
   /** present only when the row was chosen by a low-confidence fuzzy match —
@@ -48,7 +48,7 @@ export interface LedgerEntryInput {
   turn: number;
   step: number;
   modelId: string;
-  provider?: string;
+  provider?: string | undefined;
   pricedAs: string;
   matchVia?: string;
   reasoningTokens: number;

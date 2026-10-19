@@ -7,7 +7,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { makeHarness, type Harness } from './harness.ts';
 

@@ -90,7 +90,7 @@ export function apply(ctx: Context, config: Config): void {
       // cannot be correlated back to a session — read it from the event instead.
       const source = (event.data as { message?: { source?: { provider?: string; model?: string } } }).message?.source;
       const model = { id: source?.model ?? 'unknown', provider: source?.provider };
-      const resolution = resolveModel(model.id, catalog, { provider: model.provider });
+      const resolution = resolveModel(model.id, catalog, model.provider === undefined ? undefined : { provider: model.provider });
       if (resolution.kind !== 'known') {
         log.debug(`unpriced event dropped (model ${model.id} not in sheet) — ledger stays complete for priced models`);
         return;

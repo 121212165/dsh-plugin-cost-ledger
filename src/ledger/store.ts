@@ -1,6 +1,7 @@
-import { mkdirSync, readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, appendFileSync, existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { writeFileAtomic } from '@dsh-family/kit';
 import { parseJsonl, toRecord, type LedgerRecord, type LedgerEntryInput } from './record.ts';
 
 /**
@@ -12,11 +13,9 @@ import { parseJsonl, toRecord, type LedgerRecord, type LedgerEntryInput } from '
  */
 export class LedgerStore {
   readonly dataDir: string;
-  #now: () => Date;
 
-  constructor(dataDir: string | undefined, now: () => Date = () => new Date()) {
+  constructor(dataDir: string | undefined) {
     this.dataDir = dataDir ? expandHome(dataDir) : join(homedir(), '.dsh', 'cost-ledger');
-    this.#now = now;
   }
 
   fileFor(at: Date): string {
@@ -54,19 +53,13 @@ export class LedgerStore {
   }
 
   writeCsv(path: string, content: string): string {
-    mkdirSync(dirnameOf(path), { recursive: true });
-    writeFileSync(path, content, 'utf8');
+    writeFileAtomic(path, content);
     return path;
   }
 }
 
 export function expandHome(dir: string): string {
   return dir.startsWith('~') ? join(homedir(), dir.slice(1)) : dir;
-}
-
-function dirnameOf(path: string): string {
-  const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
-  return index === -1 ? '.' : path.slice(0, index);
 }
 
 function readdirSorted(dir: string): string[] {

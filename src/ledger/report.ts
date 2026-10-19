@@ -1,4 +1,4 @@
-import { toMajor, type Currency } from '../money.ts';
+import { toMajor } from '../money.ts';
 import type { Slice } from './aggregate.ts';
 import type { MonthAggregate } from './aggregate.ts';
 import type { LedgerAggregate } from './aggregate.ts';
