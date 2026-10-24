@@ -30,7 +30,9 @@
     "README.md",
     "LICENSE",
     "icon.svg",
-    "locale"
+    "locale",
+    "pricing",
+    "ledger"
   ],
   "dsh": {
     "bundle": {
@@ -45,7 +47,8 @@
     "prepare": "npm run build",
     "test": "node --test \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm test && npm run build",
+    "prepublishOnly": "npm run check"
   },
   "keywords": [
     "dsh",
@@ -55,7 +58,8 @@
     "cost",
     "ledger",
     "export",
-    "tokens"
+    "tokens",
+    "dsh-plugin"
   ],
   "repository": {
     "type": "git",
