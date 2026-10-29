@@ -37,6 +37,11 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "catalog": {
+      "category": "钱与用量",
+      "blurb": "花费持久台账：按月 JSONL、月报、CSV 导出、环比结论",
+      "entries": "`/ledger`"
     }
   },
   "engines": {
