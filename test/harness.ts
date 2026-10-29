@@ -1,14 +1,11 @@
 /** Assembly-layer harness for cost-ledger: a scripted mock dsh context that the
- * real apply() wires against. Captures command/tool registrations and the
- * session/event listener so tests can drive real usage events into the ledger
- * over a real temp directory. Methodology: dsh-auto-review's mountHarness
- * (222★), node:test port by dsh-plugin-task-forge.
+ * real apply() wires against. Captures command/tool registrations, the provided
+ * `cost-ledger` service and the session/event listener so tests can drive real
+ * usage events into the ledger over a real temp directory. The mock itself
+ * lives in @dsh-family/kit; this file adds cost-ledger's event shape.
  * @module test/harness */
 
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { after } from 'node:test';
+import { applyOnce, createMockCtx, tempDir, type Listener } from '@dsh-family/kit/kit/test-harness';
 
 export interface CapturedCommand {
   name: string;
@@ -21,10 +18,7 @@ export interface CapturedTool {
   execute: (args: Record<string, unknown>) => Promise<string>;
 }
 
-export interface CapturedListener {
-  event: string;
-  callback: (session: unknown, event: unknown) => void;
-}
+export type CapturedListener = Listener;
 
 export interface Harness {
   commands: CapturedCommand[];
@@ -41,68 +35,41 @@ export interface Harness {
 }
 
 export function makeHarness(): Harness {
-  const commands: CapturedCommand[] = [];
-  const tools: CapturedTool[] = [];
-  const listeners: CapturedListener[] = [];
-
-  const provided: Record<string, unknown> = {};
-  const ctx = {
-    logger(_name: string) {
-      return { info() {}, warn() {}, debug() {} };
-    },
-    provide(name: string, value?: unknown) {
-      provided[name] = value;
-      return () => {
-        delete provided[name];
-      };
-    },
-    on(event: string, callback: (session: unknown, event: unknown) => void) {
-      listeners.push({ event, callback });
-    },
-    commands: {
-      register(definition: CapturedCommand) {
-        commands.push(definition);
-      },
-    },
-    tools: {
-      register(definition: CapturedTool) {
-        tools.push(definition);
-      },
-    },
-  };
-
-  const dataDir = mkdtempSync(join(tmpdir(), 'cost-ledger-wire-'));
-  after(() => rmSync(dataDir, { recursive: true, force: true }));
+  const mock = createMockCtx<CapturedCommand, CapturedTool, never>();
+  const dataDir = tempDir('cost-ledger-wire-');
 
   // apply once per harness — a second call would double-register.
-  let applied: Promise<void> | null = null;
+  // Schema defaults (accounting: 'own' etc.) only apply through the host —
+  // a direct apply() call gets the plain object, so restate the defaults.
+  let pending: Record<string, unknown> = {};
+  let mounted = false;
+  const applied = applyOnce(() =>
+    import('../src/plugin.ts').then(({ apply }) =>
+      apply(mock.ctx as never, { enabled: true, accounting: 'own', dataDir, ...pending } as never),
+    ),
+  );
 
-  const harness: Harness = {
-    commands,
-    tools,
-    listeners,
-    provided,
+  return {
+    commands: mock.commands,
+    tools: mock.tools,
+    listeners: mock.listeners,
+    provided: mock.provided,
     dataDir,
     apply(config: Record<string, unknown>) {
-      // Schema defaults (accounting: 'own' etc.) only apply through the host —
-      // a direct apply() call gets the plain object, so restate the defaults.
-      applied ??= import('../src/plugin.ts').then(({ apply }) => apply(ctx as never, { enabled: true, accounting: 'own', dataDir, ...config } as never));
-      return applied;
+      if (!mounted) {
+        mounted = true;
+        pending = config;
+      }
+      return applied();
     },
-    command(name: string): CapturedCommand {
-      const found = commands.find((candidate) => candidate.name === name);
-      if (!found) throw new Error(`command ${name} was never registered`);
-      return found;
-    },
-    tool(name: string): CapturedTool {
-      const found = tools.find((candidate) => candidate.name === name);
-      if (!found) throw new Error(`tool ${name} was never registered`);
-      return found;
-    },
+    command: mock.command,
+    tool: mock.tool,
     emitUsage(sessionId: string, model: string, usage: Record<string, number>, turn = 1): void {
-      const listener = listeners.find((candidate) => candidate.event === 'session/event');
-      if (!listener) throw new Error('session/event listener was never registered');
-      listener.callback(
+      const callback = mock.listener('session/event').callback as unknown as (
+        session: unknown,
+        event: unknown,
+      ) => void;
+      callback(
         { id: sessionId },
         {
           type: 'assistant/message',
@@ -116,5 +83,4 @@ export function makeHarness(): Harness {
       );
     },
   };
-  return harness;
 }
