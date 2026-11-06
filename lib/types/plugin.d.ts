@@ -24,11 +24,11 @@ export declare const inject: string[];
 export declare const provide: string[];
 export interface Config extends CostLedgerConfig {
 }
-export declare const Config: Schema<Schemastery.ObjectS<{
-    enabled: Schema<boolean, boolean>;
-    accounting: Schema<"assume-price-aware" | "own", "assume-price-aware" | "own">;
-    dataDir: Schema<string, string>;
-    exportDir: Schema<string, string>;
+export declare const Config: Schema<Schemastery.ObjectS<NoInfer<{
+    enabled: Schema<boolean, boolean, "defined">;
+    accounting: Schema<"assume-price-aware" | "own", "assume-price-aware" | "own", "defined">;
+    dataDir: Schema<string, string, "defined">;
+    exportDir: Schema<string, string, "defined">;
     prices: Schema<({
         id?: string | null;
         currency?: "CNY" | "EUR" | "USD" | null;
@@ -42,30 +42,30 @@ export declare const Config: Schema<Schemastery.ObjectS<{
         maxOutputTokens?: number | null;
         aliases?: string[] | null;
         note?: string | null;
-    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<{
-        id: Schema<string, string>;
-        currency: Schema<"CNY" | "EUR" | "USD", "CNY" | "EUR" | "USD">;
-        perMillion: Schema<Schemastery.ObjectS<{
-            cacheRead: Schema<number, number>;
-            uncachedInput: Schema<number, number>;
-            output: Schema<number, number>;
-        }>, Schemastery.ObjectT<{
-            cacheRead: Schema<number, number>;
-            uncachedInput: Schema<number, number>;
-            output: Schema<number, number>;
-        }>>;
-        peakMultiplier: Schema<number, number>;
-        contextTokens: Schema<number, number>;
-        maxOutputTokens: Schema<number, number>;
-        aliases: Schema<string[], string[]>;
-        note: Schema<string, string>;
-    }>[]>;
-    holidays: Schema<string[], string[]>;
-}>, Schemastery.ObjectT<{
-    enabled: Schema<boolean, boolean>;
-    accounting: Schema<"assume-price-aware" | "own", "assume-price-aware" | "own">;
-    dataDir: Schema<string, string>;
-    exportDir: Schema<string, string>;
+    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
+        id: Schema<string, string, "plain">;
+        currency: Schema<"CNY" | "EUR" | "USD", "CNY" | "EUR" | "USD", "defined">;
+        perMillion: Schema<Schemastery.ObjectS<NoInfer<{
+            cacheRead: Schema<number, number, "plain">;
+            uncachedInput: Schema<number, number, "plain">;
+            output: Schema<number, number, "plain">;
+        }>>, Schemastery.ObjectT<NoInfer<{
+            cacheRead: Schema<number, number, "plain">;
+            uncachedInput: Schema<number, number, "plain">;
+            output: Schema<number, number, "plain">;
+        }>>, "plain">;
+        peakMultiplier: Schema<number, number, "plain">;
+        contextTokens: Schema<number, number, "defined">;
+        maxOutputTokens: Schema<number, number, "defined">;
+        aliases: Schema<string[], string[], "defined">;
+        note: Schema<string, string, "defined">;
+    }>>[], "defined">;
+    holidays: Schema<string[], string[], "defined">;
+}>>, Schemastery.ObjectT<NoInfer<{
+    enabled: Schema<boolean, boolean, "defined">;
+    accounting: Schema<"assume-price-aware" | "own", "assume-price-aware" | "own", "defined">;
+    dataDir: Schema<string, string, "defined">;
+    exportDir: Schema<string, string, "defined">;
     prices: Schema<({
         id?: string | null;
         currency?: "CNY" | "EUR" | "USD" | null;
@@ -79,25 +79,25 @@ export declare const Config: Schema<Schemastery.ObjectS<{
         maxOutputTokens?: number | null;
         aliases?: string[] | null;
         note?: string | null;
-    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<{
-        id: Schema<string, string>;
-        currency: Schema<"CNY" | "EUR" | "USD", "CNY" | "EUR" | "USD">;
-        perMillion: Schema<Schemastery.ObjectS<{
-            cacheRead: Schema<number, number>;
-            uncachedInput: Schema<number, number>;
-            output: Schema<number, number>;
-        }>, Schemastery.ObjectT<{
-            cacheRead: Schema<number, number>;
-            uncachedInput: Schema<number, number>;
-            output: Schema<number, number>;
-        }>>;
-        peakMultiplier: Schema<number, number>;
-        contextTokens: Schema<number, number>;
-        maxOutputTokens: Schema<number, number>;
-        aliases: Schema<string[], string[]>;
-        note: Schema<string, string>;
-    }>[]>;
-    holidays: Schema<string[], string[]>;
-}>>;
+    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
+        id: Schema<string, string, "plain">;
+        currency: Schema<"CNY" | "EUR" | "USD", "CNY" | "EUR" | "USD", "defined">;
+        perMillion: Schema<Schemastery.ObjectS<NoInfer<{
+            cacheRead: Schema<number, number, "plain">;
+            uncachedInput: Schema<number, number, "plain">;
+            output: Schema<number, number, "plain">;
+        }>>, Schemastery.ObjectT<NoInfer<{
+            cacheRead: Schema<number, number, "plain">;
+            uncachedInput: Schema<number, number, "plain">;
+            output: Schema<number, number, "plain">;
+        }>>, "plain">;
+        peakMultiplier: Schema<number, number, "plain">;
+        contextTokens: Schema<number, number, "defined">;
+        maxOutputTokens: Schema<number, number, "defined">;
+        aliases: Schema<string[], string[], "defined">;
+        note: Schema<string, string, "defined">;
+    }>>[], "defined">;
+    holidays: Schema<string[], string[], "defined">;
+}>>, "plain">;
 export declare function apply(ctx: Context, config: Config): void;
 //# sourceMappingURL=plugin.d.ts.map
